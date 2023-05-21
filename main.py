@@ -2,13 +2,15 @@ import os
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 from secret import endpoint, key
+import student_information as student
+import parent_financials as parent
 
 # formatting function
 def format_address_value(address_value):
     return f"\n......House/building number: {address_value.house_number}\n......Road: {address_value.road}\n......City: {address_value.city}\n......State: {address_value.state}\n......Postal code: {address_value.postal_code}"
 
 
-def analyze_tax_us_w2():
+def analyze_tax_us_w2(person, financial):
     # sample form document
     #formUrl = "https://raw.githubusercontent.com/Azure-Samples/cognitive-services-REST-api-samples/master/curl/form-recognizer/rest-api/w2.png"
     formUrl = "https://f.hubspotusercontent00.net/hubfs/342754/Sample_Form_W2_2020.pdf"
@@ -16,13 +18,13 @@ def analyze_tax_us_w2():
         endpoint=endpoint, credential=AzureKeyCredential(key)
     )
 
+    # Specify W2 form type
     poller = document_analysis_client.begin_analyze_document_from_url(
         "prebuilt-tax.us.w2", formUrl
     )
     w2s = poller.result()
 
     for idx, w2 in enumerate(w2s.documents):
-        # print("--------Analyzing US Tax W-2 Form #{}--------".format(idx   1))
         form_variant = w2.fields.get("W2FormVariant")
         if form_variant:
             print(
@@ -38,52 +40,25 @@ def analyze_tax_us_w2():
                 )
             )
         w2_copy = w2.fields.get("W2Copy")
-        if w2_copy:
-            print(
-                "W-2 Copy: {} has confidence: {}".format(
-                    w2_copy.value,
-                    w2_copy.confidence,
-                )
-            )
         employee = w2.fields.get("Employee")
         if employee:
-            print("Employee data:")
+
+            # Name
             employee_name = employee.value.get("Name")
-            if employee_name:
-                print(
-                    "...Name: {} has confidence: {}".format(
-                        employee_name.value, employee_name.confidence
-                    )
-                )
+            person.parseName(employee_name)
+
+            # SSN
             employee_ssn = employee.value.get("SocialSecurityNumber")
-            if employee_ssn:
-                print(
-                    "...SSN: {} has confidence: {}".format(
-                        employee_ssn.value, employee_ssn.confidence
-                    )
-                )
+            person.parseSSN(employee_ssn)
+
+            # Address
             employee_address = employee.value.get("Address")
-            if employee_address:
-                print(
-                    "...Address: {}\n......has confidence: {}".format(
-                        format_address_value(employee_address.value),
-                        employee_address.confidence,
-                    )
-                )
+            person.parseAddress(employee_address)
+
+            # Zipcode
             employee_zipcode = employee.value.get("ZipCode")
-            if employee_zipcode:
-                print(
-                    "...Zipcode: {} has confidence: {}".format(
-                        employee_zipcode.value, employee_zipcode.confidence
-                    )
-                )
-        control_number = w2.fields.get("ControlNumber")
-        if control_number:
-            print(
-                "Control Number: {} has confidence: {}".format(
-                    control_number.value, control_number.confidence
-                )
-            )
+            person.parseZipCode(employee_zipcode)
+
         employer = w2.fields.get("Employer")
         if employer:
             print("Employer data:")
@@ -305,7 +280,10 @@ def analyze_tax_us_w2():
                     )
 
                 print("----------------------------------------")
+    print(person.to_string())
 
 
 if __name__ == "__main__":
-    analyze_tax_us_w2()
+    financial_info = parent.ParentFinancials()
+    student_info = student.StudentInformation()
+    analyze_tax_us_w2(student_info, financial_info)
