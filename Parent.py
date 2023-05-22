@@ -1,7 +1,7 @@
-CONFIDENCE_THRESHOLD = 0.9
+import Person
 
 # Parent Information
-class Parent:
+class Parent(Person.Person):
     marital_status = ""
     marital_status_date = ""
     parent_1_SSN = ""

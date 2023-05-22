@@ -2,15 +2,15 @@ import os
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 from secret import endpoint, key
-import student_information as student
-import parent_financials as parent
+import Student
+import Parent
 
 # formatting function
 def format_address_value(address_value):
     return f"\n......House/building number: {address_value.house_number}\n......Road: {address_value.road}\n......City: {address_value.city}\n......State: {address_value.state}\n......Postal code: {address_value.postal_code}"
 
 
-def analyze_tax_us_w2(person, financial):
+def analyze_tax_us_w2(person, _employer):
     #formUrl = "https://raw.githubusercontent.com/Azure-Samples/cognitive-services-REST-api-samples/master/curl/form-recognizer/rest-api/w2.png"
     formUrl = "https://f.hubspotusercontent00.net/hubfs/342754/Sample_Form_W2_2020.pdf"
     document_analysis_client = DocumentAnalysisClient(
@@ -53,15 +53,18 @@ def analyze_tax_us_w2(person, financial):
         if employer:
             # Employer name
             employer_name = employer.value.get("Name")
+            _employer.parseName(employer_name)
 
             # Employer ID
             employer_id = employer.value.get("IdNumber")
 
             # Employer address
             employer_address = employer.value.get("Address")
+            _employer.parseAddress(employer_address)
             
             # Employer zipcode
             employer_zipcode = employer.value.get("ZipCode")
+            _employer.parseZipCode(employer_zipcode)
         
         # Wages, tips, and other compensation
         wages_tips = w2.fields.get("WagesTipsAndOtherCompensation")
@@ -152,6 +155,6 @@ def analyze_tax_us_w2(person, financial):
 
 
 if __name__ == "__main__":
-    financial_info = parent.Parent()
-    student_info = student.Student()
+    financial_info = Parent.Parent()
+    student_info = Student.Student()
     analyze_tax_us_w2(student_info, financial_info)

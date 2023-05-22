@@ -3,6 +3,8 @@ import Student
 
 parent_1 = Parent.Parent()
 parent_2 = Parent.Parent()
+employer_1 = Parent.Parent()
+employer_2 = Parent.Parent()
 student = Student.Student()
 
 # Questions 1 - 31 on FAFSA deal with Student Information
