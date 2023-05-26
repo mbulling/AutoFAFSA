@@ -68,6 +68,7 @@ def analyze_tax_us_w2(person, _employer):
         
         # Wages, tips, and other compensation
         wages_tips = w2.fields.get("WagesTipsAndOtherCompensation")
+        person.adjusted_gross_income = wages_tips.value
 
         # Federal income tax withheld
         fed_income_tax_withheld = w2.fields.get("FederalIncomeTaxWithheld")
@@ -150,9 +151,6 @@ def analyze_tax_us_w2(person, _employer):
                 
                 # Locality name
                 locality_name = tax.value.get("LocalityName")
-                
-    print(person.to_string())
-
 
 if __name__ == "__main__":
     financial_info = Parent.Parent()
